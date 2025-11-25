@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}TirageList{% endblock %}
+
+{% block body %}
+    <h1>TirageList</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ tirage_list.id }}</td>
+            </tr>
+            <tr>
+                <th>DateTirage</th>
+                <td>{{ tirage_list.dateTirage ? tirage_list.dateTirage|date('Y-m-d') : '' }}</td>
+            </tr>
+            <tr>
+                <th>NumeroUn</th>
+                <td>{{ tirage_list.numeroUn }}</td>
+            </tr>
+            <tr>
+                <th>NumeroDeux</th>
+                <td>{{ tirage_list.numeroDeux }}</td>
+            </tr>
+            <tr>
+                <th>NumeroTrois</th>
+                <td>{{ tirage_list.numeroTrois }}</td>
+            </tr>
+            <tr>
+                <th>NumeroQuatre</th>
+                <td>{{ tirage_list.numeroQuatre }}</td>
+            </tr>
+            <tr>
+                <th>NumeroCinq</th>
+                <td>{{ tirage_list.numeroCinq }}</td>
+            </tr>
+            <tr>
+                <th>EtoileUn</th>
+                <td>{{ tirage_list.etoileUn }}</td>
+            </tr>
+            <tr>
+                <th>EtoileDeux</th>
+                <td>{{ tirage_list.etoileDeux }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_tirage_list_index') }}">back to list</a>
+
+    <a href="{{ path('app_tirage_list_edit', {'id': tirage_list.id}) }}">edit</a>
+
+    {{ include('tirage_list/_delete_form.html.twig') }}
+{% endblock %}

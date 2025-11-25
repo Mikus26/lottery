@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New TirageList{% endblock %}
+
+{% block body %}
+    <h1>Create new TirageList</h1>
+
+    {{ include('tirage_list/_form.html.twig') }}
+
+    <a href="{{ path('app_tirage_list_index') }}">back to list</a>
+{% endblock %}

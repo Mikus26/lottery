@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit TirageList{% endblock %}
+
+{% block body %}
+    <h1>Edit TirageList</h1>
+
+    {{ include('tirage_list/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_tirage_list_index') }}">back to list</a>
+
+    {{ include('tirage_list/_delete_form.html.twig') }}
+{% endblock %}
