@@ -42,72 +42,79 @@ final class TirageListController extends AbstractController
         ]);
     }
 
-    #[Route('/import', name: 'app_tirage_list_import', methods: ['GET'])]
-    public function import(EntityManagerInterface $em): Response
-    {
-        // Chemin de ton CSV (à adapter si besoin dans ton projet)
-        $file = '/mnt/data/euromillions.csv';
+#[Route('/import', name: 'app_tirage_list_import', methods: ['GET'])]
+public function import(EntityManagerInterface $em): Response
+{
+    $file = $this->getParameter('kernel.project_dir') . '/public/doc/euromillions.csv';
 
-        if (!file_exists($file)) {
-            return new Response("CSV introuvable : $file", 404);
-        }
-
-        if (($handle = fopen($file, 'r')) === false) {
-            return new Response("Impossible d’ouvrir le fichier CSV.", 500);
-        }
-
-        // Lecture des en-têtes (NUM;DATE;JACKPOT;N1;N2;N3;N4;N5;E1;E2;...)
-        $headers = fgetcsv($handle, 0, ';');
-        if ($headers === false) {
-            return new Response("En-têtes CSV invalides.", 400);
-        }
-
-        $count = 0;
-
-        while (($data = fgetcsv($handle, 0, ';')) !== false) {
-            if (count($data) !== count($headers)) {
-                // ligne pourrie / incomplète -> on skip
-                continue;
-            }
-
-            $row = array_combine($headers, $data);
-            if ($row === false) {
-                continue;
-            }
-
-            $tirage = new TirageList();
-
-            // DATE -> dateTirage
-            $tirage->setDateTirage(new \DateTime($row['DATE']));
-
-            // N1..N5 -> numeroUn..numeroCinq
-            $tirage->setNumeroUn($row['N1']);
-            $tirage->setNumeroDeux($row['N2']);
-            $tirage->setNumeroTrois($row['N3']);
-            $tirage->setNumeroQuatre($row['N4']);
-            $tirage->setNumeroCinq($row['N5']);
-
-            // E1, E2 -> etoileUn, etoileDeux
-            $tirage->setEtoileUn($row['E1']);
-            $tirage->setEtoileDeux($row['E2']);
-
-            $em->persist($tirage);
-            $count++;
-
-            // flush par batch
-            if ($count % 50 === 0) {
-                $em->flush();
-                $em->clear();
-            }
-        }
-
-        fclose($handle);
-
-        $em->flush();
-        $em->clear();
-
-        return new Response("Import terminé : $count lignes insérées.");
+    if (!file_exists($file)) {
+        return new Response("CSV introuvable : $file", 404);
     }
+
+    if (($handle = fopen($file, 'r')) === false) {
+        return new Response("Impossible d’ouvrir le fichier CSV.", 500);
+    }
+
+    // === RÉCUPÉRER LES HEADERS EN IGNORANT LES LIGNES VIDES ===
+    $headers = null;
+    while (($line = fgetcsv($handle, 0, ';')) !== false) {
+        // ligne vide ou juste un retour chariot
+        if ($line === [null] || (count($line) === 1 && trim((string) $line[0]) === '')) {
+            continue;
+        }
+        $headers = $line;
+        break;
+    }
+
+    if ($headers === null) {
+        return new Response("En-têtes CSV invalides ou fichier vide.", 400);
+    }
+
+    $count = 0;
+
+    while (($data = fgetcsv($handle, 0, ';')) !== false) {
+        if (count($data) !== count($headers)) {
+            continue;
+        }
+
+        $row = array_combine($headers, $data);
+        if ($row === false) {
+            continue;
+        }
+
+        $tirage = new TirageList();
+
+        // DATE -> dateTirage
+        $tirage->setDateTirage(new \DateTime($row['DATE']));
+
+        // N1..N5 -> numeroUn..numeroCinq
+        $tirage->setNumeroUn($row['N1']);
+        $tirage->setNumeroDeux($row['N2']);
+        $tirage->setNumeroTrois($row['N3']);
+        $tirage->setNumeroQuatre($row['N4']);
+        $tirage->setNumeroCinq($row['N5']);
+
+        // E1, E2 -> etoileUn, etoileDeux
+        $tirage->setEtoileUn($row['E1']);
+        $tirage->setEtoileDeux($row['E2']);
+
+        $em->persist($tirage);
+        $count++;
+
+        if ($count % 50 === 0) {
+            $em->flush();
+            $em->clear();
+        }
+    }
+
+    fclose($handle);
+
+    $em->flush();
+    $em->clear();
+
+    return new Response("Import terminé : $count lignes insérées.");
+}
+
 
 
     #[Route('/{id}/edit', name: 'app_tirage_list_edit', methods: ['GET', 'POST'])]

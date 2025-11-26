@@ -5,10 +5,12 @@
 {% block body %}
     <h1>TirageList index</h1>
 
-    <table class="table">
+    <a class="btn btn-primary" href="{{ path('app_tirage_list_new') }}">Create new</a>
+    <a class="btn btn-danger" href="{{ path('app_tirage_list_import') }}">import</a>
+
+    <table class="table table-striped">
         <thead>
             <tr>
-                <th>Id</th>
                 <th>DateTirage</th>
                 <th>NumeroUn</th>
                 <th>NumeroDeux</th>
@@ -17,13 +19,11 @@
                 <th>NumeroCinq</th>
                 <th>EtoileUn</th>
                 <th>EtoileDeux</th>
-                <th>actions</th>
             </tr>
         </thead>
         <tbody>
         {% for tirage_list in tirage_lists %}
             <tr>
-                <td>{{ tirage_list.id }}</td>
                 <td>{{ tirage_list.dateTirage ? tirage_list.dateTirage|date('Y-m-d') : '' }}</td>
                 <td>{{ tirage_list.numeroUn }}</td>
                 <td>{{ tirage_list.numeroDeux }}</td>
@@ -32,10 +32,6 @@
                 <td>{{ tirage_list.numeroCinq }}</td>
                 <td>{{ tirage_list.etoileUn }}</td>
                 <td>{{ tirage_list.etoileDeux }}</td>
-                <td>
-                    <a href="{{ path('app_tirage_list_show', {'id': tirage_list.id}) }}">show</a>
-                    <a href="{{ path('app_tirage_list_edit', {'id': tirage_list.id}) }}">edit</a>
-                </td>
             </tr>
         {% else %}
             <tr>
@@ -45,5 +41,4 @@
         </tbody>
     </table>
 
-    <a href="{{ path('app_tirage_list_new') }}">Create new</a>
 {% endblock %}
