@@ -1,0 +1,16 @@
+<h2>Numéros les plus susceptibles de sortir</h2>
+
+<div class="stats">
+
+    <div>Numéro 1 : {{ top.numeroUn.valeur }} ({{ (top.numeroUn.proba_empirique * 100)|round(2) }} %)</div>
+    <div>Numéro 2 : {{ top.numeroDeux.valeur }} ({{ (top.numeroDeux.proba_empirique * 100)|round(2) }} %)</div>
+    <div>Numéro 3 : {{ top.numeroTrois.valeur }} ({{ (top.numeroTrois.proba_empirique * 100)|round(2) }} %)</div>
+    <div>Numéro 4 : {{ top.numeroQuatre.valeur }} ({{ (top.numeroQuatre.proba_empirique * 100)|round(2) }} %)</div>
+    <div>Numéro 5 : {{ top.numeroCinq.valeur }} ({{ (top.numeroCinq.proba_empirique * 100)|round(2) }} %)</div>
+
+    <hr>
+
+    <div>Étoile 1 : {{ top.etoileUn.valeur }} ({{ (top.etoileUn.proba_empirique * 100)|round(2) }} %)</div>
+    <div>Étoile 2 : {{ top.etoileDeux.valeur }} ({{ (top.etoileDeux.proba_empirique * 100)|round(2) }} %)</div>
+
+</div>

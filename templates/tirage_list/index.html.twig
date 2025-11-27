@@ -3,11 +3,17 @@
 {% block title %}TirageList index{% endblock %}
 
 {% block body %}
-    <h1>TirageList index</h1>
+<div class="wrapper">
+<div class="card">
 
+    <h1>TirageList index</h1>
+<div class="d-flex">
     <a class="btn btn-primary" href="{{ path('app_tirage_list_new') }}">Create new</a>
     <a class="btn btn-danger" href="{{ path('app_tirage_list_import') }}">import</a>
+    <a class="btn btn-warning" href="{{ path('app_tirage_list_stats') }}">rend moi riche</a>
+    </div>
 
+<div class="card-header">
     <table class="table table-striped">
         <thead>
             <tr>
@@ -21,6 +27,8 @@
                 <th>EtoileDeux</th>
             </tr>
         </thead>
+        </div>
+        <div class="card-body">
         <tbody>
         {% for tirage_list in tirage_lists %}
             <tr>
@@ -39,6 +47,8 @@
             </tr>
         {% endfor %}
         </tbody>
+        </div>
     </table>
-
+</div>
+</div>
 {% endblock %}

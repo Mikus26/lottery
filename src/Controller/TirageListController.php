@@ -42,78 +42,78 @@ final class TirageListController extends AbstractController
         ]);
     }
 
-#[Route('/import', name: 'app_tirage_list_import', methods: ['GET'])]
-public function import(EntityManagerInterface $em): Response
-{
-    $file = $this->getParameter('kernel.project_dir') . '/public/doc/euromillions.csv';
+    #[Route('/import', name: 'app_tirage_list_import', methods: ['GET'])]
+    public function import(EntityManagerInterface $em): Response
+    {
+        $file = $this->getParameter('kernel.project_dir') . '/public/doc/euromillions.csv';
 
-    if (!file_exists($file)) {
-        return new Response("CSV introuvable : $file", 404);
-    }
-
-    if (($handle = fopen($file, 'r')) === false) {
-        return new Response("Impossible d’ouvrir le fichier CSV.", 500);
-    }
-
-    // === RÉCUPÉRER LES HEADERS EN IGNORANT LES LIGNES VIDES ===
-    $headers = null;
-    while (($line = fgetcsv($handle, 0, ';')) !== false) {
-        // ligne vide ou juste un retour chariot
-        if ($line === [null] || (count($line) === 1 && trim((string) $line[0]) === '')) {
-            continue;
-        }
-        $headers = $line;
-        break;
-    }
-
-    if ($headers === null) {
-        return new Response("En-têtes CSV invalides ou fichier vide.", 400);
-    }
-
-    $count = 0;
-
-    while (($data = fgetcsv($handle, 0, ';')) !== false) {
-        if (count($data) !== count($headers)) {
-            continue;
+        if (!file_exists($file)) {
+            return new Response("CSV introuvable : $file", 404);
         }
 
-        $row = array_combine($headers, $data);
-        if ($row === false) {
-            continue;
+        if (($handle = fopen($file, 'r')) === false) {
+            return new Response("Impossible d’ouvrir le fichier CSV.", 500);
         }
 
-        $tirage = new TirageList();
-
-        // DATE -> dateTirage
-        $tirage->setDateTirage(new \DateTime($row['DATE']));
-
-        // N1..N5 -> numeroUn..numeroCinq
-        $tirage->setNumeroUn($row['N1']);
-        $tirage->setNumeroDeux($row['N2']);
-        $tirage->setNumeroTrois($row['N3']);
-        $tirage->setNumeroQuatre($row['N4']);
-        $tirage->setNumeroCinq($row['N5']);
-
-        // E1, E2 -> etoileUn, etoileDeux
-        $tirage->setEtoileUn($row['E1']);
-        $tirage->setEtoileDeux($row['E2']);
-
-        $em->persist($tirage);
-        $count++;
-
-        if ($count % 50 === 0) {
-            $em->flush();
-            $em->clear();
+        // === RÉCUPÉRER LES HEADERS EN IGNORANT LES LIGNES VIDES ===
+        $headers = null;
+        while (($line = fgetcsv($handle, 0, ';')) !== false) {
+            // ligne vide ou juste un retour chariot
+            if ($line === [null] || (count($line) === 1 && trim((string) $line[0]) === '')) {
+                continue;
+            }
+            $headers = $line;
+            break;
         }
+
+        if ($headers === null) {
+            return new Response("En-têtes CSV invalides ou fichier vide.", 400);
+        }
+
+        $count = 0;
+
+        while (($data = fgetcsv($handle, 0, ';')) !== false) {
+            if (count($data) !== count($headers)) {
+                continue;
+            }
+
+            $row = array_combine($headers, $data);
+            if ($row === false) {
+                continue;
+            }
+
+            $tirage = new TirageList();
+
+            // DATE -> dateTirage
+            $tirage->setDateTirage(new \DateTime($row['DATE']));
+
+            // N1..N5 -> numeroUn..numeroCinq
+            $tirage->setNumeroUn($row['N1']);
+            $tirage->setNumeroDeux($row['N2']);
+            $tirage->setNumeroTrois($row['N3']);
+            $tirage->setNumeroQuatre($row['N4']);
+            $tirage->setNumeroCinq($row['N5']);
+
+            // E1, E2 -> etoileUn, etoileDeux
+            $tirage->setEtoileUn($row['E1']);
+            $tirage->setEtoileDeux($row['E2']);
+
+            $em->persist($tirage);
+            $count++;
+
+            if ($count % 50 === 0) {
+                $em->flush();
+                $em->clear();
+            }
+        }
+
+        fclose($handle);
+
+        $em->flush();
+        $em->clear();
+
+        return new Response("Import terminé : $count lignes insérées.");
     }
-
-    fclose($handle);
-
-    $em->flush();
-    $em->clear();
-
-    return new Response("Import terminé : $count lignes insérées.");
-}
 
 
 
@@ -144,5 +144,75 @@ public function import(EntityManagerInterface $em): Response
         }
 
         return $this->redirectToRoute('app_tirage_list_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/stats', name: 'app_tirage_list_stats', methods: ['GET'])]
+    public function stats(TirageListRepository $repo): Response
+    {
+        $tirages = $repo->findAll();
+
+        if (!$tirages) {
+            return new Response("Aucun tirage en base.", 200);
+        }
+
+        $total = count($tirages);
+
+        // tableaux de comptage
+        $counts = [
+            'numeroUn'    => [],
+            'numeroDeux'  => [],
+            'numeroTrois' => [],
+            'numeroQuatre' => [],
+            'numeroCinq'  => [],
+            'etoileUn'    => [],
+            'etoileDeux'  => [],
+        ];
+
+        foreach ($tirages as $t) {
+            $n1 = (int) $t->getNumeroUn();
+            $n2 = (int) $t->getNumeroDeux();
+            $n3 = (int) $t->getNumeroTrois();
+            $n4 = (int) $t->getNumeroQuatre();
+            $n5 = (int) $t->getNumeroCinq();
+            $e1 = (int) $t->getEtoileUn();
+            $e2 = (int) $t->getEtoileDeux();
+
+            $counts['numeroUn'][$n1]     = ($counts['numeroUn'][$n1]     ?? 0) + 1;
+            $counts['numeroDeux'][$n2]   = ($counts['numeroDeux'][$n2]   ?? 0) + 1;
+            $counts['numeroTrois'][$n3]  = ($counts['numeroTrois'][$n3]  ?? 0) + 1;
+            $counts['numeroQuatre'][$n4] = ($counts['numeroQuatre'][$n4] ?? 0) + 1;
+            $counts['numeroCinq'][$n5]   = ($counts['numeroCinq'][$n5]   ?? 0) + 1;
+            $counts['etoileUn'][$e1]     = ($counts['etoileUn'][$e1]     ?? 0) + 1;
+            $counts['etoileDeux'][$e2]   = ($counts['etoileDeux'][$e2]   ?? 0) + 1;
+        }
+
+        // on transforme en [valeur, count, proba] et on trie par fréquence desc
+        $result = [];
+        foreach ($counts as $position => $values) {
+            arsort($values); // trie décroissant sur le nombre d'apparitions
+
+            $result[$position] = [];
+            foreach ($values as $num => $count) {
+                $result[$position][] = [
+                    'valeur'      => $num,
+                    'occurences'  => $count,
+                    'proba_empirique' => $count / $total, // entre 0 et 1
+                ];
+            }
+        }
+
+        // si tu veux juste voir ça vite fait en JSON :
+        return $this->render('tirage_list/stats.html.twig', [
+            'total' => $total,
+            'top' => [
+                'numeroUn'    => $result['numeroUn'][0]    ?? null,
+                'numeroDeux'  => $result['numeroDeux'][0]  ?? null,
+                'numeroTrois' => $result['numeroTrois'][0] ?? null,
+                'numeroQuatre' => $result['numeroQuatre'][0] ?? null,
+                'numeroCinq'  => $result['numeroCinq'][0]  ?? null,
+                'etoileUn'    => $result['etoileUn'][0]    ?? null,
+                'etoileDeux'  => $result['etoileDeux'][0]  ?? null,
+            ],
+        ]);
     }
 }
