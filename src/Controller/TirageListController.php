@@ -115,8 +115,6 @@ final class TirageListController extends AbstractController
         return new Response("Import terminé : $count lignes insérées.");
     }
 
-
-
     #[Route('/{id}/edit', name: 'app_tirage_list_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, TirageList $tirageList, EntityManagerInterface $entityManager): Response
     {
