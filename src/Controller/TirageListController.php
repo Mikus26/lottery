@@ -157,13 +157,13 @@ final class TirageListController extends AbstractController
 
         // tableaux de comptage
         $counts = [
-            'numeroUn'    => [],
-            'numeroDeux'  => [],
-            'numeroTrois' => [],
+            'numeroUn'     => [],
+            'numeroDeux'   => [],
+            'numeroTrois'  => [],
             'numeroQuatre' => [],
-            'numeroCinq'  => [],
-            'etoileUn'    => [],
-            'etoileDeux'  => [],
+            'numeroCinq'   => [],
+            'etoileUn'     => [],
+            'etoileDeux'   => [],
         ];
 
         foreach ($tirages as $t) {
@@ -192,25 +192,59 @@ final class TirageListController extends AbstractController
             $result[$position] = [];
             foreach ($values as $num => $count) {
                 $result[$position][] = [
-                    'valeur'      => $num,
-                    'occurences'  => $count,
-                    'proba_empirique' => $count / $total, // entre 0 et 1
+                    'valeur'           => $num,
+                    'occurences'       => $count,
+                    'proba_empirique'  => $count / $total,
                 ];
             }
         }
 
-        // si tu veux juste voir ça vite fait en JSON :
+        // --- petite boucle de "prédiction" pondérée par les fréquences ---
+        $prediction = [];
+
+        foreach ($result as $position => $values) {
+            $pool = [];
+
+            // on répète chaque valeur selon son nombre d'occurrences
+            foreach ($values as $entry) {
+                for ($i = 0; $i < $entry['occurences']; $i++) {
+                    $pool[] = $entry['valeur'];
+                }
+            }
+
+            // tirage aléatoire pondéré (si jamais vide, null par sécurité)
+            $prediction[$position] = !empty($pool)
+                ? $pool[array_rand($pool)]
+                : null;
+        }
+
+        // structure finale de tirage "prévu"
+        $tiragePrevu = [
+            'numeros' => [
+                $prediction['numeroUn']     ?? null,
+                $prediction['numeroDeux']   ?? null,
+                $prediction['numeroTrois']  ?? null,
+                $prediction['numeroQuatre'] ?? null,
+                $prediction['numeroCinq']   ?? null,
+            ],
+            'etoiles' => [
+                $prediction['etoileUn']   ?? null,
+                $prediction['etoileDeux'] ?? null,
+            ],
+        ];
+
         return $this->render('tirage_list/stats.html.twig', [
             'total' => $total,
             'top' => [
-                'numeroUn'    => $result['numeroUn'][0]    ?? null,
-                'numeroDeux'  => $result['numeroDeux'][0]  ?? null,
-                'numeroTrois' => $result['numeroTrois'][0] ?? null,
+                'numeroUn'     => $result['numeroUn'][0]     ?? null,
+                'numeroDeux'   => $result['numeroDeux'][0]   ?? null,
+                'numeroTrois'  => $result['numeroTrois'][0]  ?? null,
                 'numeroQuatre' => $result['numeroQuatre'][0] ?? null,
-                'numeroCinq'  => $result['numeroCinq'][0]  ?? null,
-                'etoileUn'    => $result['etoileUn'][0]    ?? null,
-                'etoileDeux'  => $result['etoileDeux'][0]  ?? null,
+                'numeroCinq'   => $result['numeroCinq'][0]   ?? null,
+                'etoileUn'     => $result['etoileUn'][0]     ?? null,
+                'etoileDeux'   => $result['etoileDeux'][0]   ?? null,
             ],
+            'prediction' => $tiragePrevu,
         ]);
     }
 }
